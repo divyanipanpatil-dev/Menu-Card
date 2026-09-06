@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Restaurant Menu</title>
+    <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🍽 Restaurant Menu</h>
+        </div>
+
+        <!-- Menu -->
+        <div class="menu-grid">
+
+            <!-- Burger -->
+            <div class="menu-item">
+                <img src="image/image1.webp" alt="Burger" class="food-image">
+
+                <h3>Burger - ₹299</h3>
+                <p>Juicy patty with fresh veggies</p>
+
+                <button class="add-btn" onclick="addToCart('Burger', 299)">
+                    Add to Cart
+                </button>
+            </div>
+
+            <!-- Pizza -->
+            <div class="menu-item">
+                <img src="image/image2.webp" alt="Pizza" class="food-image">
+
+                <h3>Pizza - ₹399</h3>
+                <p>Freshly baked with love</p>
+
+                <button class="add-btn" onclick="addToCart('Pizza', 399)">
+                    Add to Cart
+                </button>
+            </div>
+
+            <!-- Salad -->
+            <div class="menu-item">
+                <img src="image/image3.webp" alt="Salad" class="food-image">
+
+                <h3>Salad - ₹199</h3>
+                <p>Healthy and fresh ingredients</p>
+
+                <button class="add-btn" onclick="addToCart('Salad', 199)">
+                    Add to Cart
+                </button>
+            </div>
+
+            <!-- cup cake -->
+            <div class="menu-item">
+                <img src="image/image5.webp" alt="Cup cake" class="food-image">
+
+                <h3>Cup cake - ₹100</h3>
+                <p> Delicious freshly baked cupcake topped with rich frosting.</p>
+
+                <button class="add-btn" onclick="addToCart('Cup cake', 100)">
+                    Add to Cart
+                </button>
+            </div>
+
+            <!--  Tea -->
+            <div class="menu-item">
+                <img src="image/image6.jpg" alt="Tea" class="food-image">
+                <h3>Tea - ₹20</h3>
+                <p>Freshly brewed hot tea</p>
+                <button class="add-btn" onclick="addToCart('Tea', 20)">Add to Cart</button>
+            </div>
+
+            <!-- Coffee -->
+            <div class="menu-item">
+                <img src="image/image7.jpg" alt="Coffee" class="food-image">
+                <h3>Coffee - ₹99</h3>
+                <p>Freshly brewed perfection</p>
+                <button class="add-btn" onclick="addToCart('Coffee', 99)">Add to Cart</button>
+            </div>
+
+
+            <div class="cart-container">
+                <h2>🛒 Your Order</h2>
+                <div id="cart-items"></div>
+                <p style="font-size: 20px; margin: 20px 0;"><strong>Total: ₹<span id="total">0</span></strong></p>
+                <button class="order-btn" onclick="placeOrder()">Place Order</button>
+            </div>
+        </div>
+
+        <script>
+            let cart = [];
+            let total = 0;
+
+            function addToCart(item, price) {
+                const existingItem = cart.find(cartItem => cartItem.item === item);
+                if (existingItem) {
+                    existingItem.quantity += 1;
+                } else {
+                    cart.push({ item: item, price: price, quantity: 1 });
+                }
+                total += price;
+                updateCart();
+            }
+
+            function updateCart() {
+                const cartItems = document.getElementById('cart-items');
+                cartItems.innerHTML = '';
+
+                if (cart.length === 0) {
+                    cartItems.innerHTML = '<p style="text-align: center; padding: 20px;">Your cart is empty</p>';
+                    document.getElementById('total').textContent = '0';
+                    return;
+                }
+
+                cart.forEach((cartItem, index) => {
+                    const cartItemElement = document.createElement('div');
+                    cartItemElement.className = 'cart-item';
+                    cartItemElement.innerHTML = `
+                    <div>
+                        <strong>${cartItem.item}</strong>
+                        <br>₹${cartItem.price} x ${cartItem.quantity}
+                    </div>
+                    <div class="quantity-controls">
+                        <button class="quantity-btn" onclick="changeQuantity(${index}, -1)">-</button>
+                        <span>${cartItem.quantity}</span>
+                        <button class="quantity-btn" onclick="changeQuantity(${index}, 1)">+</button>
+                        <button class="delete-btn" onclick="removeFromCart(${index})">Delete</button>
+                    </div>
+                `;
+                    cartItems.appendChild(cartItemElement);
+                });
+
+                document.getElementById('total').textContent = total;
+            }
+
+            function changeQuantity(index, change) {
+                const cartItem = cart[index];
+                if (change === 1) {
+                    cartItem.quantity += 1;
+                    total += cartItem.price;
+                } else if (change === -1 && cartItem.quantity > 1) {
+                    cartItem.quantity -= 1;
+                    total -= cartItem.price;
+                }
+                updateCart();
+            }
+
+            function removeFromCart(index) {
+                const cartItem = cart[index];
+                total -= cartItem.price * cartItem.quantity;
+                cart.splice(index, 1);
+                updateCart();
+            }
+
+            function placeOrder() {
+                if (cart.length === 0) {
+                    alert('Your cart is empty! Please add items first.');
+                    return;
+                }
+                alert('✅ Order placed successfully!\nTotal: ₹' + total + '\nThank you for your order!');
+                cart = [];
+                total = 0;
+                updateCart();
+            }
+
+            function placeOrder() {
+                if (cart.length === 0) {
+                    alert('Your cart is empty! Please add items first.');
+                    return;
+                }
+
+                const customerName = prompt("Enter your name:");
+                if (!customerName) return;
+
+                fetch("save_order.php", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        name: customerName,
+                        items: cart,
+                        total: total
+                    })
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.status === "success") {
+                            alert("✅ Order placed successfully!\nTotal: ₹" + total);
+                            cart = [];
+                            total = 0;
+                            updateCart();
+                        } else {
+                            alert("❌ Failed to place order. Try again.");
+                        }
+                    });
+            }
+
+
+            updateCart();
+        </script>
+</body>
+
+</html>
